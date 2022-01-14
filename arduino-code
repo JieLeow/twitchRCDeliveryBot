@@ -1,1 +1,213 @@
+//general outline for code
 
+#include <WiFi.h>
+#include <WebSockets Client.h>
+#include <ArduinoJson.h>
+
+//initialize  network parameters
+const char ssid[] = SSID;
+const char password[] = PASS;
+
+//declare websocket client class variable
+WebSocketsClient websocket;
+
+//allocate the JSON document
+StaticJsonDocument<200> doc;
+
+//parameters for Twitch channel (need to create one)
+const char twitch_channel[] = TWITCH_CHANNEL;
+
+// Right Motor 1 (define pin inputs and outputs)
+
+// Right Motor 2  (define pin inputs and outputs)
+
+// Left Motor 1  (define pin inputs and outputs)
+
+// Left Motor 2 (define pin inputs and outputs)
+
+#define CW 1 //clockwise
+#define CCW 0 //counter clockwise
+#define debug 1 //change to 0 to hide serial monitor debugging information or set to 1 to view
+
+int PWM_max = 100; //max speed of the motor (subject to change)
+int PWM_min = 80; //min speed of the motor (subject to change)
+
+int delay_motor = 3000;
+int motor_high = 750;
+
+ // Initialize the motors to debug
+
+void setup() {
+// Connect to WiFi
+  WiFi.begin(ssid,password);
+//setup Serial Monitor to display information
+  Serial.begin(115200); // or Serial.begin(9600)
+  while(WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println();
+  Serial.print("IP Address: "); 
+  Serial.println(WiFi.localIP());
+
+  // Server address, port, and URL path
+  webSocket.begin("irc-ws.chat.twitch.tv", 80, "/"); //twitch_server = 'irc.chat.twitch.tv'
+
+  // Event handler
+  webSocket.onEvent(webSocketEvent);
+
+  // Try every 5000ms if connection has failed
+  webSocket.setReconnectInterval(5000);
+ 
+
+  //Initiate Motors
+  motor_L1.begin();
+  motor_L2.begin();
+  motor_R1.begin();
+  motor_R2.begin();
+
+}
+
+void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
+  switch(type) {
+    // If the websocket connection is successful, try to join the IRC server
+    case WStype_CONNECTED:
+      Serial.printf("[WSc] Connected to: %s\n", payload);
+      webSocket.sendTXT("PASS " + String(twitch_oauth_token) + "\r\n"); //edit
+      webSocket.sendTXT("NAME " + String(twitch_name) + "\r\n"); //edit
+      webSocket.sendTXT("JOIN " + String(twitch_channel) + "\r\n");
+      break;
+    // If we get a response, print it to Serial
+    case WStype_TEXT: {
+      Serial.printf("> %s\n", payload);
+      String payload_str = String((char*) payload);
+      // Search for the beginning on the JSON-encoded message (":!")
+      int quote_start = payload_str.indexOf(":!");
+      // If the message is addressed to the chatbot if using
+      if(quote_start > 0) {
+        int quote_end = payload_str.length();
+        String pixel_str = payload_str.substring(quote_start+2, quote_end);
+        Serial.println(pixel_str);
+        parseMessage(pixel_str); //→void parseMessage?
+      }
+      break;
+    }
+    // Handle disconnecting from the websocket
+    case WStype_DISCONNECTED:
+      Serial.printf("[WSc] Disconnected!\n");
+      webSocket.sendTXT("PART " + String(TWITCH_CHANNEL) + "\r\n"); //edit
+      break;
+  }
+}
+
+
+void loop() {
+
+  // Debug - Run Robot Test 
+  //  motor_test_directions();
+
+  //Receive Commands via Serial Comms to control the Robot.
+
+  //Receive Serial commands to control the Robot
+  if (Serial.available() > 0) {
+    String data = Serial.readStringUntil('\n');
+    Serial.print("Command Received: ");
+    Serial.println(data);
+
+    //Move Droid Bot
+    if (data == "Left") {
+      motor_Right(60, CW, CCW);
+      Serial.print("Right");
+    }
+
+    if (data == "Right") {
+      motor_Left(60, CCW, CW);
+      Serial.print("Left");
+    }
+
+
+    if (data == "Forward") {
+      motor_Forward(60, CW, CCW);
+      Serial.print("Forward");
+    }
+
+    if (data == "Reverse") {
+      motor_Reverse(60, CCW, CW);
+      Serial.print("Reverse");
+    }
+
+  }
+
+
+}
+
+void motor_Left(int PWM_pcntg, int dir, int dir_ccw) {
+
+  motor_R1.rotate(PWM_pcntg, dir);
+  motor_R2.rotate(PWM_pcntg, dir_ccw);
+
+  delay(motor_high);
+
+  motor_R1.stop();
+  motor_R2.stop();
+
+}
+
+void motor_Right(int PWM_pcntg, int dir, int dir_ccw) {
+
+  motor_L1.rotate(PWM_pcntg, dir);
+  motor_L2.rotate(PWM_pcntg, dir);
+
+  delay(motor_high);
+
+  motor_L1.stop();
+  motor_L2.stop();
+
+}
+
+void motor_Forward(int PWM_pcntg, int dir, int dir_ccw) {
+
+  motor_L1.rotate(PWM_pcntg, dir);
+  motor_L2.rotate(PWM_pcntg, dir);
+  motor_R1.rotate(PWM_pcntg, dir_ccw);
+  motor_R2.rotate(PWM_pcntg, dir_ccw);
+
+
+  delay(motor_high);
+
+  motor_L1.stop();
+  motor_L2.stop();
+  motor_R1.stop();
+  motor_R2.stop();
+
+
+}
+
+void motor_Reverse(int PWM_pcntg, int dir, int dir_ccw) {
+
+
+  motor_L1.rotate(PWM_pcntg, dir_ccw);
+  motor_L2.rotate(PWM_pcntg, dir_ccw);
+  motor_R1.rotate(PWM_pcntg, dir_ccw);
+  motor_R2.rotate(PWM_pcntg, dir_ccw);
+
+  delay(motor_high);
+
+  motor_L1.stop();
+  motor_L2.stop();
+  motor_R1.stop();
+  motor_R2.stop();
+
+}
+
+//Debug Motor Directions
+void motor_test_directions() {
+  motor_Left(60, CCW, CW); // degree/angle of turn (subject to change)
+  delay(delay_motor);
+  motor_Right(60, CCW, CW);
+  delay(delay_motor);
+  motor_Forward(60, CCW, CCW);
+  delay(delay_motor);
+  motor_Reverse(60, CW, CW);
+  delay(delay_motor);
+}
