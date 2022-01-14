@@ -178,7 +178,14 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+<!-- REFERENCES -->
+## Acknowledgments
 
+* https://www.youtube.com/watch?v=xHSg7IpmLo4
+* https://github.com/acrobotic/Ai_Demos_ESP32/tree/master/twitch_chat_ws2812b
+* 
+
+<p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
