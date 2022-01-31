@@ -32,8 +32,6 @@ const char twitch_channel[] = TWITCH_CHANNEL;
 int PWM_max = 100; //max speed of the motor (subject to change)
 int PWM_min = 80; //min speed of the motor (subject to change)
 
-int delay_motor = 3000;
-int motor_high = 750;
 
  // Initialize the motors to debug
 
@@ -114,7 +112,7 @@ void loop() {
     Serial.print("Command Received: ");
     Serial.println(data);
 
-    //Move Droid Bot
+
     if (data == "Left") {
       motor_Right(60, CW, CCW);
       Serial.print("Right");
@@ -143,42 +141,18 @@ void loop() {
 
 void motor_Left(int PWM_pcntg, int dir, int dir_ccw) {
 
-  motor_R1.rotate(PWM_pcntg, dir);
-  motor_R2.rotate(PWM_pcntg, dir_ccw);
-
-  delay(motor_high);
-
-  motor_R1.stop();
-  motor_R2.stop();
 
 }
 
 void motor_Right(int PWM_pcntg, int dir, int dir_ccw) {
 
-  motor_L1.rotate(PWM_pcntg, dir);
-  motor_L2.rotate(PWM_pcntg, dir);
 
-  delay(motor_high);
-
-  motor_L1.stop();
-  motor_L2.stop();
 
 }
 
 void motor_Forward(int PWM_pcntg, int dir, int dir_ccw) {
 
-  motor_L1.rotate(PWM_pcntg, dir);
-  motor_L2.rotate(PWM_pcntg, dir);
-  motor_R1.rotate(PWM_pcntg, dir_ccw);
-  motor_R2.rotate(PWM_pcntg, dir_ccw);
 
-
-  delay(motor_high);
-
-  motor_L1.stop();
-  motor_L2.stop();
-  motor_R1.stop();
-  motor_R2.stop();
 
 
 }
@@ -186,28 +160,7 @@ void motor_Forward(int PWM_pcntg, int dir, int dir_ccw) {
 void motor_Reverse(int PWM_pcntg, int dir, int dir_ccw) {
 
 
-  motor_L1.rotate(PWM_pcntg, dir_ccw);
-  motor_L2.rotate(PWM_pcntg, dir_ccw);
-  motor_R1.rotate(PWM_pcntg, dir_ccw);
-  motor_R2.rotate(PWM_pcntg, dir_ccw);
 
-  delay(motor_high);
-
-  motor_L1.stop();
-  motor_L2.stop();
-  motor_R1.stop();
-  motor_R2.stop();
 
 }
 
-//Debug Motor Directions
-void motor_test_directions() {
-  motor_Left(60, CCW, CW); // degree/angle of turn (subject to change)
-  delay(delay_motor);
-  motor_Right(60, CCW, CW);
-  delay(delay_motor);
-  motor_Forward(60, CCW, CCW);
-  delay(delay_motor);
-  motor_Reverse(60, CW, CW);
-  delay(delay_motor);
-}
